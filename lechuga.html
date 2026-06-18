@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lechuga · Generador de Ejercicios de Química</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tesseract.js/4.1.1/tesseract.min.js"></script>
+<style>
+:root{
+  --bg:#06120d;
+  --bg2:#0a1a13;
+  --panel:#0e2018;
+  --panel2:#102a1d;
+  --emerald:#10b981;
+  --emerald2:#34d399;
+  --emerald-dim:#065f46;
+  --text:#e6f4ec;
+  --text-dim:#8fae9d;
+  --danger:#f87171;
+  --warn:#fbbf24;
+  --border:#1c3a2b;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  font-family:'DM Mono', 'Share Tech Mono', monospace;
+  background:radial-gradient(circle at 20% 0%, #0c2118 0%, var(--bg) 60%);
+  color:var(--text);
+  min-height:100vh;
+}
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Mono:wght@400;500&display=swap');
+h1,h2,h3,.brand{font-family:'Syne',sans-serif;}
+
+header{
+  padding:28px 20px 18px;
+  text-align:center;
+  border-bottom:1px solid var(--border);
+  background:linear-gradient(180deg, rgba(16,185,129,0.08), transparent);
+}
+.brand{
+  font-size:2.2rem;
+  font-weight:800;
+  letter-spacing:-1px;
+  color:var(--emerald2);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:10px;
+}
+.brand span{font-size:1.6rem;}
+header p{color:var(--text-dim); margin:6px 0 0; font-size:0.85rem;}
+
+.container{
+  max-width:880px;
+  margin:0 auto;
+  padding:24px 16px 80px;
+}
+
+.card{
+  background:var(--panel);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:22px;
+  margin-bottom:22px;
+  box-shadow:0 8px 24px -12px rgba(0,0,0,0.6);
+}
+
+.upload-zone{
+  border:2px dashed var(--emerald-dim);
+  border-radius:14px;
+  padding:26px;
+  text-align:center;
+  cursor:pointer;
+  transition:0.2s;
+  background:var(--bg2);
+}
+.upload-zone:hover{border-color:var(--emerald); background:#0c241a;}
+.upload-zone p{margin:6px 0; color:var(--text-dim); font-size:0.85rem;}
+.upload-zone strong{color:var(--emerald2);}
+
+input[type=file]{display:none;}
+
+textarea{
+  width:100%;
+  min-height:120px;
+  margin-top:14px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:10px;
+  color:var(--text);
+  padding:12px;
+  font-family:'DM Mono',monospace;
+  font-size:0.85rem;
+  resize:vertical;
+}
+textarea:focus{outline:none; border-color:var(--emerald);}
+
+.btn{
+  background:var(--emerald);
+  color:#04140d;
+  border:none;
+  padding:12px 20px;
+  border-radius:10px;
+  font-weight:700;
+  font-family:'Syne',sans-serif;
+  cursor:pointer;
+  font-size:0.9rem;
+  transition:0.15s;
+  letter-spacing:0.3px;
+}
+.btn:hover{background:var(--emerald2); transform:translateY(-1px);}
+.btn:disabled{opacity:0.5; cursor:not-allowed;}
+.btn-outline{
+  background:transparent;
+  border:1px solid var(--emerald-dim);
+  color:var(--emerald2);
+}
+.btn-outline:hover{background:rgba(16,185,129,0.1);}
+.btn-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:14px;}
+
+.progress-wrap{margin-top:14px; display:none;}
+.progress-bar{
+  height:8px; background:var(--bg2); border-radius:6px; overflow:hidden; border:1px solid var(--border);
+}
+.progress-fill{
+  height:100%; width:0%; background:linear-gradient(90deg,var(--emerald-dim),var(--emerald2));
+  transition:width 0.2s;
+}
+.progress-label{font-size:0.75rem; color:var(--text-dim); margin-top:6px;}
+
+.topics-detected{
+  display:flex; flex-wrap:wrap; gap:8px; margin-top:14px;
+}
+.tag{
+  background:rgba(16,185,129,0.12);
+  border:1px solid var(--emerald-dim);
+  color:var(--emerald2);
+  padding:5px 12px;
+  border-radius:999px;
+  font-size:0.72rem;
+  font-weight:500;
+}
+
+.section-title{
+  display:flex; align-items:center; gap:10px;
+  font-size:1.3rem; margin-bottom:4px; color:var(--text);
+}
+.section-title .num{
+  background:var(--emerald); color:#04140d; width:28px; height:28px;
+  border-radius:8px; display:flex; align-items:center; justify-content:center;
+  font-size:0.85rem; font-weight:800; flex-shrink:0;
+}
+.section-sub{color:var(--text-dim); font-size:0.78rem; margin:0 0 14px 38px;}
+
+.exercise{
+  background:var(--panel2);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:16px 18px;
+  margin-bottom:14px;
+}
+.exercise-q{font-size:0.95rem; line-height:1.5; margin-bottom:10px;}
+.exercise-q .chem{color:var(--emerald2); font-weight:600;}
+.exercise-q .dh-pos{color:var(--warn); font-weight:600;}
+.exercise-q .dh-neg{color:#60a5fa; font-weight:600;}
+
+.options{display:flex; flex-direction:column; gap:8px; margin:10px 0;}
+.opt-btn{
+  text-align:left;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  color:var(--text);
+  padding:10px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-family:'DM Mono',monospace;
+  font-size:0.85rem;
+  transition:0.15s;
+}
+.opt-btn:hover{border-color:var(--emerald);}
+.opt-btn.correct{background:rgba(16,185,129,0.18); border-color:var(--emerald); color:var(--emerald2);}
+.opt-btn.wrong{background:rgba(248,113,113,0.15); border-color:var(--danger); color:var(--danger);}
+.opt-btn.disabled{pointer-events:none;}
+
+input.answer-input{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:8px;
+  color:var(--text);
+  padding:9px 12px;
+  font-family:'DM Mono',monospace;
+  width:100%;
+  max-width:260px;
+  margin-top:4px;
+}
+input.answer-input:focus{outline:none; border-color:var(--emerald);}
+
+.check-row{display:flex; gap:10px; align-items:center; margin-top:10px; flex-wrap:wrap;}
+.small-btn{
+  background:var(--emerald-dim);
+  color:var(--emerald2);
+  border:1px solid var(--emerald-dim);
+  padding:7px 14px;
+  border-radius:8px;
+  cursor:pointer;
+  font-size:0.78rem;
+  font-weight:600;
+}
+.small-btn:hover{background:var(--emerald); color:#04140d;}
+
+.answer-box{
+  margin-top:10px;
+  padding:12px 14px;
+  background:#06150f;
+  border-left:3px solid var(--emerald);
+  border-radius:8px;
+  font-size:0.83rem;
+  line-height:1.5;
+  color:var(--text-dim);
+  display:none;
+}
+.answer-box.show{display:block;}
+.answer-box b{color:var(--emerald2);}
+
+.feedback{font-size:0.78rem; margin-top:6px; font-weight:600;}
+.feedback.ok{color:var(--emerald2);}
+.feedback.bad{color:var(--danger);}
+
+.empty-state{
+  text-align:center; padding:60px 20px; color:var(--text-dim);
+}
+.empty-state .icon{font-size:2.5rem; margin-bottom:10px;}
+
+footer{
+  text-align:center; color:var(--text-dim); font-size:0.72rem; padding:20px; opacity:0.6;
+}
+
+::-webkit-scrollbar{width:8px;}
+::-webkit-scrollbar-thumb{background:var(--emerald-dim); border-radius:4px;}
+
+.guide-controls{
+  display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;
+}
+.guide-controls h2{margin:0; color:var(--emerald2); font-size:1.4rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand"><span>🥬</span> Lechuga</div>
+  <p>De tus apuntes de química a ejercicios prácticos, en segundos.</p>
+</header>
+
+<div class="container">
+
+  <div class="card">
+    <h3 style="margin-top:0;">1. Sube tu apunte</h3>
+    <div class="upload-zone" id="dropZone">
+      <p><strong>Toca para subir una foto</strong> de tu libreta</p>
+      <p>o pega el texto directamente abajo 👇</p>
+      <input type="file" id="fileInput" accept="image/*">
+    </div>
+    <textarea id="notesText" placeholder="...o pega/escribe aquí el texto de tus apuntes (ej. 'oxidación, mol, número de Avogadro, masa molar, entalpía, sistema cerrado, teoría de colisiones')"></textarea>
+
+    <div class="progress-wrap" id="progressWrap">
+      <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+      <div class="progress-label" id="progressLabel">Procesando...</div>
+    </div>
+
+    <div class="topics-detected" id="topicsDetected"></div>
+
+    <div class="btn-row">
+      <button class="btn" id="ocrBtn">📷 Procesar Imagen con OCR</button>
+      <button class="btn btn-outline" id="generateBtn">⚙️ Generar Guía de Ejercicios</button>
+    </div>
+  </div>
+
+  <div id="guideOutput"></div>
+
+</div>
+
+<footer>Lechuga · Generador local de ejercicios · No se envían datos a ningún servidor</footer>
+
+<script>
+/* ================= CONFIG QUÍMICA ================= */
+const ATOMIC_WEIGHTS = {
+  H:1.008, He:4.003, Li:6.94, C:12.011, N:14.007, O:15.999, Na:22.99,
+  Mg:24.305, Al:26.982, Si:28.085, P:30.974, S:32.06, Cl:35.45, K:39.098,
+  Ca:40.078, Mn:54.938, Fe:55.845, Cu:63.546, Zn:65.38, Br:79.904, Ag:107.868,
+  Cr:51.996, Pb:207.2, I:126.904, Ba:137.327
+};
+
+const OXIDATION_COMPOUNDS = [
+  {formula:"H2SO4", target:"S", answer:"+6", html:"H<sub>2</sub>S<span class='target'>O</span><sub>4</sub>"},
+  {formula:"KMnO4", target:"Mn", answer:"+7", html:"KMn<sub>1</sub>O<sub>4</sub>"},
+  {formula:"K2Cr2O7", target:"Cr", answer:"+6", html:"K<sub>2</sub>Cr<sub>2</sub>O<sub>7</sub>"},
+  {formula:"HNO3", target:"N", answer:"+5", html:"HNO<sub>3</sub>"},
+  {formula:"H2O2", target:"O", answer:"-1", html:"H<sub>2</sub>O<sub>2</sub>"},
+  {formula:"NH3", target:"N", answer:"-3", html:"NH<sub>3</sub>"},
+  {formula:"CO2", target:"C", answer:"+4", html:"CO<sub>2</sub>"},
+  {formula:"Fe2O3", target:"Fe", answer:"+3", html:"Fe<sub>2</sub>O<sub>3</sub>"},
+  {formula:"Na2SO3", target:"S", answer:"+4", html:"Na<sub>2</sub>SO<sub>3</sub>"},
+  {formula:"HClO4", target:"Cl", answer:"+7", html:"HClO<sub>4</sub>"}
+];
+
+const MOLAR_COMPOUNDS = [
+  {name:"Agua", formula:"H2O", html:"H<sub>2</sub>O", comp:[["H",2],["O",1]]},
+  {name:"Glucosa", formula:"C6H12O6", html:"C<sub>6</sub>H<sub>12</sub>O<sub>6</sub>", comp:[["C",6],["H",12],["O",6]]},
+  {name:"Dióxido de carbono", formula:"CO2", html:"CO<sub>2</sub>", comp:[["C",1],["O",2]]},
+  {name:"Ácido sulfúrico", formula:"H2SO4", html:"H<sub>2</sub>SO<sub>4</sub>", comp:[["H",2],["S",1],["O",4]]},
+  {name:"Cloruro de sodio", formula:"NaCl", html:"NaCl", comp:[["Na",1],["Cl",1]]},
+  {name:"Amoniaco", formula:"NH3", html:"NH<sub>3</sub>", comp:[["N",1],["H",3]]},
+  {name:"Hidróxido de calcio", formula:"Ca(OH)2", html:"Ca(OH)<sub>2</sub>", comp:[["Ca",1],["O",2],["H",2]]},
+  {name:"Sulfato de cobre", formula:"CuSO4", html:"CuSO<sub>4</sub>", comp:[["Cu",1],["S",1],["O",4]]}
+];
+
+const THERMO_REACTIONS = [
+  {eq:"CH4 + 2O2 → CO2 + 2H2O", dh:-890, note:"Combustión del metano"},
+  {eq:"N2 + O2 → 2NO", dh:180, note:"Síntesis de óxido nítrico"},
+  {eq:"C(s) + O2(g) → CO2(g)", dh:-393.5, note:"Combustión del carbono"},
+  {eq:"2H2 + O2 → 2H2O(g)", dh:-484, note:"Combustión del hidrógeno"},
+  {eq:"CaCO3(s) → CaO(s) + CO2(g)", dh:178, note:"Descomposición térmica del carbonato de calcio"},
+  {eq:"NH4Cl(s) → NH3(g) + HCl(g)", dh:176, note:"Descomposición del cloruro de amonio"},
+  {eq:"H2(g) + Cl2(g) → 2HCl(g)", dh:-184.6, note:"Formación de ácido clorhídrico"},
+  {eq:"2NaHCO3(s) → Na2CO3(s) + H2O(g) + CO2(g)", dh:91, note:"Descomposición del bicarbonato de sodio"}
+];
+
+const SYSTEM_CASES = [
+  {desc:"Un termo cerrado herméticamente que conserva café caliente.", answer:"Aislado", reason:"No intercambia materia ni energía (calor) de forma significativa con el entorno; el termo está diseñado para minimizar el intercambio térmico."},
+  {desc:"Un vaso de agua hirviendo sobre la estufa, sin tapa.", answer:"Abierto", reason:"Intercambia tanto materia (vapor de agua que escapa) como energía (calor) con el entorno."},
+  {desc:"Un tubo de ensayo sellado con una reacción química en su interior.", answer:"Cerrado", reason:"Intercambia energía (calor) con el entorno, pero no materia, ya que está sellado."},
+  {desc:"Una olla de presión con la válvula cerrada, calentándose en la estufa.", answer:"Cerrado", reason:"No permite la salida de materia (vapor) mientras la válvula está cerrada, pero sí transfiere calor."},
+  {desc:"El universo en su totalidad (modelo teórico).", answer:"Aislado", reason:"Por definición no intercambia materia ni energía con nada externo, ya que no existe nada 'fuera' de él."},
+  {desc:"Una taza de café caliente destapada sobre el escritorio.", answer:"Abierto", reason:"Pierde vapor (materia) y calor (energía) hacia el ambiente."},
+  {desc:"Un globo inflado y bien anudado.", answer:"Cerrado", reason:"El gas (materia) no puede salir, pero el calor sí puede transferirse a través del globo."},
+  {desc:"Un refrigerador ideal perfectamente aislado térmicamente (hipotético).", answer:"Aislado", reason:"No permitiría flujo de materia ni de energía con el exterior."}
+];
+
+const COLLISION_SCENARIOS = [
+  {change:"Se aumenta la temperatura del sistema de 25°C a 60°C.", effect:"aumenta", reason:"A mayor temperatura, las partículas se mueven con más energía cinética, lo que incrementa la frecuencia y la eficacia de los choques."},
+  {change:"Se pulveriza un reactivo sólido en partículas más pequeñas (mayor área superficial).", effect:"aumenta", reason:"Una mayor área superficial expone más partículas al reactivo, aumentando la probabilidad de colisiones efectivas."},
+  {change:"Se diluye la disolución, reduciendo la concentración del reactivo.", effect:"disminuye", reason:"Menor concentración significa menos partículas por unidad de volumen, por lo tanto menos colisiones por unidad de tiempo."},
+  {change:"Se agrega un catalizador adecuado a la reacción.", effect:"aumenta", reason:"El catalizador reduce la energía de activación necesaria, permitiendo que más colisiones resulten efectivas sin alterar el catalizador."},
+  {change:"Se disminuye la presión en una reacción en fase gaseosa.", effect:"disminuye", reason:"Menor presión implica menor concentración de moléculas de gas en el mismo volumen, reduciendo la frecuencia de choques."},
+  {change:"Se enfría la mezcla de reacción de 80°C a 10°C.", effect:"disminuye", reason:"A menor temperatura las partículas se mueven más lento, reduciendo la energía y frecuencia de los choques eficaces."},
+  {change:"Se aumenta la concentración de uno de los reactivos al doble.", effect:"aumenta", reason:"Mayor concentración aumenta el número de partículas disponibles para colisionar, incrementando la velocidad de reacción."},
+  {change:"Se usa un bloque sólido grande del reactivo en lugar de fragmentos pequeños.", effect:"disminuye", reason:"Menor área superficial expuesta reduce el número de colisiones posibles entre partículas reactivas."}
+];
+
+const TOPIC_KEYWORDS = {
+  "Oxidación": ["oxidación","oxidacion","número de oxidación","numero de oxidacion","redox"],
+  "Mol y Avogadro": ["mol","avogadro","6.022","numero de avogadro","número de avogadro"],
+  "Masa molar": ["masa molar","peso molecular","masa atomica","masa atómica"],
+  "Cálculo de moles": ["gramos","n=m/m","moles equivalen","cálculo de moles","calculo de moles"],
+  "Termoquímica": ["entalpía","entalpia","exotérmic","endotérmic","exotermic","endotermic","δh","kj"],
+  "Tipos de sistema": ["sistema abierto","sistema cerrado","sistema aislado","tipos de sistema"],
+  "Teoría de colisiones": ["teoría de las colisiones","teoria de las colisiones","choques eficaces","colisiones"]
+};
+
+/* ================= UTILIDADES ================= */
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+function pick(arr,n){ return shuffle(arr).slice(0,n); }
+function fmtNum(n, decimals=2){
+  return Number(n.toFixed(decimals)).toString();
+}
+function uid(){ return 'ex'+Math.random().toString(36).slice(2,10); }
+
+/* ================= DETECCIÓN DE TEMAS ================= */
+function detectTopics(text){
+  const lower = text.toLowerCase();
+  const found = [];
+  for(const [topic, keywords] of Object.entries(TOPIC_KEYWORDS)){
+    if(keywords.some(k=>lower.includes(k))) found.push(topic);
+  }
+  return found;
+}
+
+function renderTopicsDetected(topics){
+  const wrap = document.getElementById('topicsDetected');
+  wrap.innerHTML = '';
+  if(topics.length===0) return;
+  topics.forEach(t=>{
+    const span = document.createElement('span');
+    span.className='tag';
+    span.textContent = '✓ '+t;
+    wrap.appendChild(span);
+  });
+}
+
+/* ================= GENERADORES DE EJERCICIOS ================= */
+
+// 1. Oxidación
+function genOxidationExercise(){
+  const c = pick(OXIDATION_COMPOUNDS,1)[0];
+  const allAnswers = ["+1","+2","+3","+4","+5","+6","+7","-1","-2","-3"];
+  let opts = shuffle(allAnswers.filter(a=>a!==c.answer)).slice(0,3);
+  opts.push(c.answer);
+  opts = shuffle(opts);
+  return {
+    id: uid(),
+    type:'mcq',
+    title:`Calcula el número de oxidación del <span class="chem">${c.target}</span> en <span class="chem">${c.html}</span>`,
+    options: opts,
+    correct: c.answer,
+    explanation: `En ${c.formula}, aplicando la regla de suma cero (la suma de los números de oxidación es igual a la carga total de la molécula, que es 0), el número de oxidación de ${c.target} es <b>${c.answer}</b>.`
+  };
+}
+
+// 2. Mol y Avogadro
+function genAvogadroExercise(){
+  const directions = ['toMoles','toParticles'];
+  const dir = pick(directions,1)[0];
+  const substance = pick(["átomos de hierro","moléculas de agua","átomos de carbono","moléculas de O2","átomos de sodio"],1)[0];
+  if(dir==='toMoles'){
+    const exponent = (Math.random()*3+23.3).toFixed(2); // ~ between 23.3 and 26.3
+    const coeff = (Math.random()*8+1.2).toFixed(2);
+    const particles = `${coeff} × 10^${Math.floor(exponent)}`;
+    const numParticles = parseFloat(coeff)*Math.pow(10,Math.floor(exponent));
+    const moles = numParticles/6.022e23;
+    return {
+      id:uid(), type:'numeric',
+      title:`Si tienes <span class="chem">${particles}</span> ${substance}, ¿cuántos moles representan? (usa N<sub>A</sub> = 6.022×10²³)`,
+      correct: fmtNum(moles,3),
+      tolerance: 0.02,
+      explanation:`n = N / N<sub>A</sub> = ${particles} / 6.022×10²³ ≈ <b>${fmtNum(moles,3)} mol</b>`
+    };
+  } else {
+    const moles = (Math.random()*4+0.2).toFixed(2);
+    const particles = parseFloat(moles)*6.022e23;
+    return {
+      id:uid(), type:'numeric',
+      title:`¿Cuántas partículas (${substance}) hay en <span class="chem">${moles} mol</span>? Expresa tu respuesta en notación científica (coeficiente × 10²³, redondeado a 2 decimales).`,
+      correct: fmtNum(particles/1e23,2),
+      tolerance: 0.05,
+      explanation:`N = n × N<sub>A</sub> = ${moles} × 6.022×10²³ ≈ <b>${fmtNum(particles/1e23,2)} × 10²³ partículas</b>`
+    };
+  }
+}
+
+// 3. Masa molar
+function genMolarMassExercise(){
+  const c = pick(MOLAR_COMPOUNDS,1)[0];
+  let total = 0;
+  const breakdown = c.comp.map(([el,count])=>{
+    const w = ATOMIC_WEIGHTS[el];
+    const sub = w*count;
+    total += sub;
+    return `${el} × ${count} = ${fmtNum(w,3)} × ${count} = ${fmtNum(sub,2)} g/mol`;
+  });
+  return {
+    id:uid(), type:'numeric',
+    title:`Calcula la masa molar total de la <span class="chem">${c.name} (${c.html})</span> en g/mol.`,
+    correct: fmtNum(total,2),
+    tolerance: 0.3,
+    explanation: breakdown.join('<br>') + `<br><b>Masa molar total ≈ ${fmtNum(total,2)} g/mol</b>`
+  };
+}
+
+// 4. Cálculo de moles (n = m/M)
+function genMolesCalcExercise(){
+  const c = pick(MOLAR_COMPOUNDS,1)[0];
+  let molarMass = 0;
+  c.comp.forEach(([el,count])=>{ molarMass += ATOMIC_WEIGHTS[el]*count; });
+  const grams = (Math.random()*90+5).toFixed(1);
+  const moles = grams/molarMass;
+  return {
+    id:uid(), type:'numeric',
+    title:`Tienes <span class="chem">${grams} g</span> de ${c.name} (${c.html}), cuya masa molar es ${fmtNum(molarMass,2)} g/mol. ¿Cuántos moles equivalen? (usa n = m/M)`,
+    correct: fmtNum(moles,3),
+    tolerance: 0.02,
+    explanation:`n = m / M = ${grams} g / ${fmtNum(molarMass,2)} g/mol ≈ <b>${fmtNum(moles,3)} mol</b>`
+  };
+}
+
+// 5. Termoquímica
+function genThermoExercise(){
+  const r = pick(THERMO_REACTIONS,1)[0];
+  const isExo = r.dh < 0;
+  const opts = shuffle(['Exotérmica (libera energía)','Endotérmica (absorbe energía)']);
+  const correctLabel = isExo ? 'Exotérmica (libera energía)' : 'Endotérmica (absorbe energía)';
+  const dhClass = isExo ? 'dh-neg' : 'dh-pos';
+  return {
+    id:uid(), type:'mcq',
+    title:`Dada la ecuación termoquímica: <span class="chem">${r.eq}</span>&nbsp; <span class="${dhClass}">ΔH = ${r.dh} kJ</span><br>(${r.note}) — ¿Qué tipo de reacción es?`,
+    options: opts,
+    correct: correctLabel,
+    explanation:`Como ΔH ${isExo?'es negativo':'es positivo'} (${r.dh} kJ), la reacción ${isExo?'libera':'absorbe'} energía hacia/desde el entorno, por lo tanto es <b>${correctLabel}</b>.`
+  };
+}
+
+// 6. Tipos de sistema
+function genSystemExercise(){
+  const s = pick(SYSTEM_CASES,1)[0];
+  const opts = shuffle(['Abierto','Cerrado','Aislado']);
+  return {
+    id:uid(), type:'mcq',
+    title:`Clasifica el siguiente caso práctico: "<i>${s.desc}</i>"`,
+    options: opts,
+    correct: s.answer,
+    explanation:`Es un sistema <b>${s.answer}</b>. ${s.reason}`
+  };
+}
+
+// 7. Teoría de colisiones
+function genCollisionExercise(){
+  const s = pick(COLLISION_SCENARIOS,1)[0];
+  const opts = shuffle(['Aumenta','Disminuye']);
+  const correctLabel = s.effect==='aumenta' ? 'Aumenta':'Disminuye';
+  return {
+    id:uid(), type:'mcq',
+    title:`Situación: "<i>${s.change}</i>" — ¿Qué le ocurre a la velocidad de la reacción?`,
+    options: opts,
+    correct: correctLabel,
+    explanation:`La velocidad <b>${s.effect}</b>. ${s.reason}`
+  };
+}
+
+const GENERATORS = [
+  {topic:"Asignación de números de oxidación", icon:"⚛️", fn:genOxidationExercise, count:2},
+  {topic:"El mol y el número de Avogadro", icon:"🔢", fn:genAvogadroExercise, count:2},
+  {topic:"Cálculo de masa molar y peso molecular", icon:"⚖️", fn:genMolarMassExercise, count:2},
+  {topic:"Cálculo de moles (n = m/M)", icon:"🧮", fn:genMolesCalcExercise, count:2},
+  {topic:"Reacciones exotérmicas y endotérmicas", icon:"🔥", fn:genThermoExercise, count:2},
+  {topic:"Tipos de sistema", icon:"🧪", fn:genSystemExercise, count:2},
+  {topic:"Teoría de las colisiones", icon:"💥", fn:genCollisionExercise, count:2}
+];
+
+/* ================= RENDERIZADO DE LA GUÍA ================= */
+function buildGuide(){
+  const output = document.getElementById('guideOutput');
+  output.innerHTML = '';
+
+  const controls = document.createElement('div');
+  controls.className = 'guide-controls';
+  controls.innerHTML = `
+    <h2>📋 Guía de ejercicios generada</h2>
+    <div class="btn-row" style="margin:0;">
+      <button class="btn btn-outline" id="regenAllBtn">🔄 Regenerar todo</button>
+    </div>
+  `;
+  output.appendChild(controls);
+
+  GENERATORS.forEach((gen, idx)=>{
+    const section = document.createElement('div');
+    section.className = 'card';
+    section.innerHTML = `
+      <div class="section-title"><span class="num">${idx+1}</span> ${gen.icon} ${gen.topic}</div>
+      <p class="section-sub">Ejercicios generados automáticamente — autoevalúa con "Ver respuesta"</p>
+      <div class="exercise-list" id="list-${idx}"></div>
+    `;
+    output.appendChild(section);
+    renderExerciseList(idx, gen);
+  });
+
+  document.getElementById('regenAllBtn').addEventListener('click', buildGuide);
+  output.scrollIntoView({behavior:'smooth'});
+}
+
+function renderExerciseList(idx, gen){
+  const list = document.getElementById(`list-${idx}`);
+  list.innerHTML = '';
+  for(let i=0;i<gen.count;i++){
+    const ex = gen.fn();
+    list.appendChild(renderExercise(ex, i+1));
+  }
+}
+
+function renderExercise(ex, num){
+  const wrap = document.createElement('div');
+  wrap.className = 'exercise';
+  wrap.id = ex.id;
+
+  let bodyHtml = `<div class="exercise-q"><b>${num}.</b> ${ex.title}</div>`;
+
+  if(ex.type === 'mcq'){
+    bodyHtml += `<div class="options">`;
+    ex.options.forEach(opt=>{
+      bodyHtml += `<button class="opt-btn" data-answer="${escapeAttr(opt)}">${opt}</button>`;
+    });
+    bodyHtml += `</div><div class="feedback" id="${ex.id}-feedback"></div>`;
+  } else if(ex.type === 'numeric'){
+    bodyHtml += `
+      <input type="text" class="answer-input" id="${ex.id}-input" placeholder="Tu respuesta...">
+      <div class="check-row">
+        <button class="small-btn" id="${ex.id}-checkbtn">✓ Verificar</button>
+      </div>
+      <div class="feedback" id="${ex.id}-feedback"></div>
+    `;
+  }
+
+  bodyHtml += `
+    <div class="check-row">
+      <button class="small-btn" id="${ex.id}-togglebtn">👁️ Ver respuesta</button>
+    </div>
+    <div class="answer-box" id="${ex.id}-answerbox">${ex.explanation}</div>
+  `;
+
+  wrap.innerHTML = bodyHtml;
+
+  // Toggle answer
+  wrap.querySelector(`#${ex.id}-togglebtn`).addEventListener('click', (e)=>{
+    const box = wrap.querySelector(`#${ex.id}-answerbox`);
+    box.classList.toggle('show');
+    e.target.textContent = box.classList.contains('show') ? '🙈 Ocultar respuesta' : '👁️ Ver respuesta';
+  });
+
+  if(ex.type === 'mcq'){
+    const buttons = wrap.querySelectorAll('.opt-btn');
+    buttons.forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        buttons.forEach(b=>b.classList.add('disabled'));
+        const chosen = btn.dataset.answer;
+        const feedback = wrap.querySelector(`.feedback`);
+        if(chosen === ex.correct){
+          btn.classList.add('correct');
+          feedback.textContent = '✅ ¡Correcto!';
+          feedback.className = 'feedback ok';
+        } else {
+          btn.classList.add('wrong');
+          feedback.textContent = '❌ Incorrecto. Revisa la explicación abajo.';
+          feedback.className = 'feedback bad';
+          buttons.forEach(b=>{
+            if(b.dataset.answer === ex.correct) b.classList.add('correct');
+          });
+        }
+      });
+    });
+  } else if(ex.type === 'numeric'){
+    wrap.querySelector(`#${ex.id}-checkbtn`).addEventListener('click', ()=>{
+      const input = wrap.querySelector(`#${ex.id}-input`);
+      const feedback = wrap.querySelector(`#${ex.id}-feedback`);
+      const userVal = parseFloat(input.value.replace(',','.'));
+      const correctVal = parseFloat(ex.correct);
+      if(isNaN(userVal)){
+        feedback.textContent = '⚠️ Ingresa un número válido.';
+        feedback.className = 'feedback bad';
+        return;
+      }
+      const tol = ex.tolerance ? Math.max(ex.tolerance, correctVal*0.05) : Math.abs(correctVal*0.05);
+      if(Math.abs(userVal-correctVal) <= tol){
+        feedback.textContent = '✅ ¡Correcto!';
+        feedback.className = 'feedback ok';
+      } else {
+        feedback.textContent = `❌ No es correcto. (Respuesta esperada ≈ ${ex.correct})`;
+        feedback.className = 'feedback bad';
+      }
+    });
+  }
+
+  return wrap;
+}
+
+function escapeAttr(str){
+  return String(str).replace(/"/g,'&quot;');
+}
+
+/* ================= OCR (Tesseract.js) ================= */
+const fileInput = document.getElementById('fileInput');
+const dropZone = document.getElementById('dropZone');
+const ocrBtn = document.getElementById('ocrBtn');
+const progressWrap = document.getElementById('progressWrap');
+const progressFill = document.getElementById('progressFill');
+const progressLabel = document.getElementById('progressLabel');
+const notesText = document.getElementById('notesText');
+
+dropZone.addEventListener('click', ()=>fileInput.click());
+
+let selectedFile = null;
+fileInput.addEventListener('change', (e)=>{
+  selectedFile = e.target.files[0];
+  if(selectedFile){
+    dropZone.querySelector('p strong').textContent = `Imagen seleccionada: ${selectedFile.name}`;
+  }
+});
+
+ocrBtn.addEventListener('click', async ()=>{
+  if(!selectedFile){
+    fileInput.click();
+    return;
+  }
+  progressWrap.style.display = 'block';
+  progressFill.style.width = '0%';
+  progressLabel.textContent = 'Iniciando OCR...';
+  ocrBtn.disabled = true;
+
+  try{
+    const result = await Tesseract.recognize(selectedFile, 'spa+eng', {
+      logger: m => {
+        if(m.status === 'recognizing text'){
+          const pct = Math.round(m.progress*100);
+          progressFill.style.width = pct+'%';
+          progressLabel.textContent = `Reconociendo texto... ${pct}%`;
+        } else {
+          progressLabel.textContent = m.status;
+        }
+      }
+    });
+    notesText.value = result.data.text;
+    progressLabel.textContent = '✅ Texto extraído. Revisa y genera tu guía.';
+    const topics = detectTopics(result.data.text);
+    renderTopicsDetected(topics);
+  } catch(err){
+    progressLabel.textContent = '❌ Error al procesar la imagen: '+err.message;
+  } finally {
+    ocrBtn.disabled = false;
+  }
+});
+
+notesText.addEventListener('input', ()=>{
+  const topics = detectTopics(notesText.value);
+  renderTopicsDetected(topics);
+});
+
+document.getElementById('generateBtn').addEventListener('click', ()=>{
+  buildGuide();
+});
+</script>
+</body>
+</html>
